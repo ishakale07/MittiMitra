@@ -1,0 +1,12 @@
+key,name_en,name_mr,unit,low,high,fix_product,fix_kg_per_acre
+pH,Soil pH,जमिनीचा सामू (pH),,6.5,8.5,,
+OC,Organic carbon,सेंद्रिय कर्ब,%,0.5,0.75,,
+N,Nitrogen,नत्र,kg/ha,280,560,,
+P,Phosphorus,स्फुरद,kg/ha,10,25,,
+K,Potassium,पालाश,kg/ha,108,280,,
+S,Sulphur,गंधक,ppm,10,0,Gypsum,40
+Zn,Zinc,झिंक,ppm,0.6,0,Zinc sulphate,10
+B,Boron,बोरॉन,ppm,0.5,0,Borax,2
+Fe,Iron,लोह,ppm,4.5,0,Ferrous sulphate,10
+Mn,Manganese,मँगनीज,ppm,2,0,Manganese sulphate,4
+Cu,Copper,तांबे,ppm,0.2,0,Copper sulphate,2

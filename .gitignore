@@ -1,0 +1,12 @@
+# build output
+build/
+*.exe
+*.o
+*.obj
+/mittimitra
+
+# editor settings
+.vscode/
+
+# real farmer data stays on your machine
+data/history.csv

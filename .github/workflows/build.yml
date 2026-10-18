@@ -1,0 +1,9 @@
+name: build
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: g++ -std=c++17 -Wall -Wextra -Iinclude src/main.cpp -o mittimitra
+      - run: g++ -std=c++17 -Wall -Wextra -Iinclude tests/test_mittimitra.cpp -o run_tests && ./run_tests
