@@ -1,5 +1,6 @@
 #pragma once
 #include "Util.hpp"
+#include <cmath>
 #include <map>
 #include <memory>
 #include <optional>
@@ -34,6 +35,7 @@ public:
     virtual std::optional<Remedy> deficiencyRule() const { return std::nullopt; }  // what to add when it is off
     virtual double doseFactor() const { return 1.0; }                              // scales the crop's N-P-K dose
     const std::string& key() const { return key_; }
+    const Text& name() const { return t_.name; }
     double value() const { return value_; }
     std::string reading() const { return num(value_) + (t_.unit.empty() ? "" : " " + t_.unit); }
 protected:
@@ -44,11 +46,13 @@ class MacroNutrient : public SoilParameter {         // N, P, K: low -> add 25%,
 public:
     using SoilParameter::SoilParameter;
     Text verdict() const override {
-        static const Text say[] = {{"is LOW - apply a little extra", "कमी आहे - थोडे जास्त खत द्या"},
-                                   {"is enough - apply the normal dose", "पुरेशा प्रमाणात आहे - नेहमीइतकेच खत द्या"},
-                                   {"is HIGH - apply less, extra is wasted money", "जास्त आहे - कमी खत द्या, पैसे वाया जातात"}};
-        const Text& s = say[int(level())];
-        return {t_.name.en + " " + s.en, t_.name.mr + " " + s.mr};
+        const std::string span = num(t_.low) + "-" + num(t_.high) + " " + t_.unit + ") - ", pct = fmt(std::abs(doseFactor() - 1) * 100);
+        const Text& n = t_.name;
+        if (level() == Level::Low)  return {n.en + " is LOW (ideal " + span + "apply " + pct + "% more than the standard dose",
+                                            n.mr + " कमी आहे (योग्य " + span + "प्रमाणित मात्रेपेक्षा " + pct + "% जास्त द्या"};
+        if (level() == Level::High) return {n.en + " is HIGH (ideal " + span + "apply " + pct + "% less than the standard dose",
+                                            n.mr + " जास्त आहे (योग्य " + span + "प्रमाणित मात्रेपेक्षा " + pct + "% कमी द्या"};
+        return {n.en + " is enough (ideal " + span + "apply the standard dose", n.mr + " पुरेशा प्रमाणात आहे (योग्य " + span + "प्रमाणित मात्रा द्या"};
     }
     double doseFactor() const override { return level() == Level::Low ? 1.25 : level() == Level::High ? 0.75 : 1.0; }
 };
@@ -57,9 +61,9 @@ class PH : public SoilParameter {                    // acidic < low, strongly a
 public:
     using SoilParameter::SoilParameter;
     Text verdict() const override {
-        if (level() == Level::Low) return {"Soil is acidic - crops cannot take up nutrients well", "जमीन आम्लयुक्त आहे - पिकांना अन्नद्रव्ये नीट मिळत नाहीत"};
-        if (level() == Level::High) return {"Soil is strongly alkaline - nutrients get locked up", "जमीन खूप क्षारयुक्त आहे - अन्नद्रव्ये पिकांना मिळत नाहीत"};
-        return {"Soil pH is fine for most crops", "जमिनीचा सामू बहुतेक पिकांसाठी योग्य आहे"};
+        if (level() == Level::Low) return {"Soil is acidic (ideal " + num(t_.low) + "-" + num(t_.high) + ") - crops cannot take up nutrients well", "जमीन आम्लयुक्त आहे (योग्य " + num(t_.low) + "-" + num(t_.high) + ") - पिकांना अन्नद्रव्ये नीट मिळत नाहीत"};
+        if (level() == Level::High) return {"Soil is strongly alkaline (ideal " + num(t_.low) + "-" + num(t_.high) + ") - nutrients get locked up", "जमीन खूप क्षारयुक्त आहे (योग्य " + num(t_.low) + "-" + num(t_.high) + ") - अन्नद्रव्ये पिकांना मिळत नाहीत"};
+        return {"Soil pH is fine for most crops (ideal " + num(t_.low) + "-" + num(t_.high) + ")", "जमिनीचा सामू बहुतेक पिकांसाठी योग्य आहे (योग्य " + num(t_.low) + "-" + num(t_.high) + ")"};
     }
     std::optional<Remedy> deficiencyRule() const override {
         if (level() == Level::Low) return Remedy{{"Add agricultural lime (ask your KVK for the quantity)", "कृषी चुना वापरा - प्रमाण KVK कडून विचारा"}, "", 0};
@@ -72,7 +76,7 @@ class OrganicCarbon : public SoilParameter {
 public:
     using SoilParameter::SoilParameter;
     Text verdict() const override {
-        if (level() == Level::Low) return {"Organic carbon is LOW - soil holds little water and nutrients", "सेंद्रिय कर्ब कमी आहे - जमीन पाणी व अन्नद्रव्ये कमी धरते"};
+        if (level() == Level::Low) return {"Organic carbon is LOW (needs at least " + num(t_.low) + "%) - soil holds little water and nutrients", "सेंद्रिय कर्ब कमी आहे (किमान " + num(t_.low) + "% हवे) - जमीन पाणी व अन्नद्रव्ये कमी धरते"};
         return {"Organic carbon is good", "सेंद्रिय कर्ब चांगल्या प्रमाणात आहे"};
     }
     std::optional<Remedy> deficiencyRule() const override {

@@ -35,11 +35,18 @@ private:
     Dose dose_;
 };
 
+struct Need { Text name; double standard, adjusted; };   // kg of nutrient per acre: crop's standard dose vs adjusted for this soil
+
 class FertilizerPlan {                               // crop's reference dose x what the soil already has
 public:
     FertilizerPlan(const SoilCard& card, const Crop& crop) {
-        auto need = [&](double kgPerHa, const char* key) { return kgPerHa * kHaToAcre * card[key].doseFactor(); };
-        double n = need(crop.n, "N"), p = need(crop.p, "P"), k = need(crop.k, "K");
+        auto need = [&](const char* key, const char* nutrient, double kgPerHa) {
+            double base = kgPerHa * kHaToAcre, adj = base * card[key].doseFactor();
+            const Text& nm = card[key].name();
+            needs_.push_back({{nm.en + " (" + nutrient + ")", nm.mr + " (" + nutrient + ")"}, base, adj});
+            return adj;
+        };
+        double n = need("N", "N", crop.n), p = need("P", "P2O5", crop.p), k = need("K", "K2O", crop.k);
         dose_["DAP"] = p / kDapP2O5;                                          // DAP also carries some nitrogen
         dose_["Urea"] = std::max(0.0, (n - dose_["DAP"] * kDapN) / kUreaN);
         dose_["MOP"] = k / kMopK2O;
@@ -51,8 +58,9 @@ public:
     }
     const Dose& dose() const { return dose_; }
     const std::vector<Text>& notes() const { return notes_; }
+    const std::vector<Need>& needs() const { return needs_; }
 private:
-    Dose dose_; std::vector<Text> notes_;
+    Dose dose_; std::vector<Text> notes_; std::vector<Need> needs_;
 };
 
 class CostComparison {                               // before / after spend projection

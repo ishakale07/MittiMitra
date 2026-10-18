@@ -66,6 +66,13 @@ void show(const Record& r, const Catalog& cat) {
               << T(" acres", " एकर") << " =====\n\n" << Text{"YOUR SOIL, IN PLAIN WORDS", "तुमची जमीन - सोप्या भाषेत"}.get() << "\n";
     for (auto& p : a.card.parameters())
         std::cout << "  [" << levelText(p->level()).get() << "] " << p->reading() << " - " << p->verdict().get() << "\n";
+    std::cout << "\n" << Text{"NUTRIENT NEED: standard dose -> adjusted for your soil (kg per acre)",
+                            "अन्नद्रव्यांची गरज: प्रमाणित मात्रा -> तुमच्या जमिनीनुसार (किलो प्रति एकर)"}.get() << "\n";
+    for (auto& n : a.plan.needs()) {
+        double d = n.adjusted - n.standard;
+        std::cout << "  " << n.name.get() << ": " << fmt(n.standard, 1) << " -> " << fmt(n.adjusted, 1) << "  ("
+                  << (std::abs(d) < 0.05 ? T("standard dose", "प्रमाणित मात्रा") : (d > 0 ? "+" : "") + fmt(d, 1) + T(" kg", " किलो")) << ")\n";
+    }
     a.cost.print();
     if (!a.plan.notes().empty()) std::cout << "\n" << Text{"ALSO DO", "हेही करा"}.get() << "\n";
     for (auto& n : a.plan.notes()) std::cout << "  - " << n.get() << "\n";
